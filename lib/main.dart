@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'dart:async';
-import 'dart:math';
 
 void main() => runApp(FlutterWifiIoT());
 
@@ -50,35 +49,26 @@ class _FlutterWifiIoTState extends State<FlutterWifiIoT> {
 
     Map<String, WifiNetwork> networkMap = {};
     for (var network in networks) {
-      if (network.ssid == "Redemi_Not_8" ||
-          network.ssid == "BCD@Y9" ||
-          network.ssid == "ESP32-third_node") {
+      if (network.ssid == "ESP32-first_node" ||
+          network.ssid == "ESP32-second_node") {
         networkMap[network.ssid!] = network; // Use non-null assertion
       }
     }
 
     setState(() {
       _networks = [
-        networkMap["Redemi_Not_8"],
-        networkMap["BCD@Y9"],
-        networkMap["ESP32-third_node"]
+        networkMap["ESP32-first_node"],
+        networkMap["ESP32-second_node"],
       ];
-      _isIndoor = _isNetworkIndoor(networkMap["Redemi_Not_8"], 5) &&
-          _isNetworkIndoor(networkMap["BCD@Y9"], 5) &&
-          _isNetworkIndoor(networkMap["ESP32-third_node"], 4);
+      _isIndoor = _isNetworkIndoor(networkMap["ESP32-first_node"], -85) &&
+          _isNetworkIndoor(networkMap["ESP32-second_node"], -62);
       _isLoading = false;
     });
   }
 
-  bool _isNetworkIndoor(WifiNetwork? network, double threshold) {
+  bool _isNetworkIndoor(WifiNetwork? network, int threshold) {
     if (network == null) return false;
-    final distance = _calculateDistance(network.level!.toInt());
-    return distance < threshold;
-  }
-
-  num _calculateDistance(int rssi) {
-    const double lambda = 0.125; // Wavelength in meters
-    return (lambda * pow(10, rssi / -20)) / (4 * pi);
+    return network.level! >= threshold;
   }
 
   @override
@@ -115,23 +105,17 @@ class _FlutterWifiIoTState extends State<FlutterWifiIoT> {
                             ),
                           );
                         } else {
-                          final distance =
-                              _calculateDistance(network.level!.toInt());
                           return Card(
                             child: Column(
                               children: [
                                 Text(network.ssid.toString()),
                                 SizedBox(height: 5),
-                                Text('RSSI: ${network.level} dBm'),
-                                SizedBox(height: 5),
-                                Text(
-                                  'Distance: ${distance.toStringAsFixed(2)} meters',
-                                  style: TextStyle(
-                                    color: distance < 2
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
+                                Text('RSSI: ${network.level} dBm',
+                                    style: TextStyle(
+                                      color: network.level! > -70
+                                          ? Colors.green
+                                          : Colors.red,
+                                    )),
                               ],
                             ),
                           );
@@ -157,11 +141,9 @@ class _FlutterWifiIoTState extends State<FlutterWifiIoT> {
   String _getNetworkName(int index) {
     switch (index) {
       case 0:
-        return "Redemi_Not_8";
+        return "ESP32-first_node";
       case 1:
-        return "BCD@Y9";
-      case 2:
-        return "ESP32-third_node";
+        return "ESP32-second_node";
       default:
         return "";
     }
